@@ -6,7 +6,7 @@ import pdb
 import math
 import sys
 sys.path.append('scripts/');
-from html import HTML
+from html2 import HTML
 import gensim
 
 # Handles 2D and 3D, reduces one dimension
@@ -112,33 +112,33 @@ def saveTopWords(result, dataloader, dtype, topN = 10):
     page.setTitle(['Set', 'Ground Truth', 'Top Words']);
 
     numInst = dataloader.numInst[dtype];
-    for ii in xrange(numInst):
+    for ii in range(numInst):
         rowContent = []; # row
 
         data = dataloader.getIndexInstance(ii, dtype);
         # set
         setData = data[:dataloader.evalSize];
         setWords = [dataloader.ind2word[str(setData[jj])] \
-                        for jj in xrange(setData.size(0))];
+                        for jj in range(setData.size(0))];
         rowContent.append('\n'.join(setWords));
 
         # gt words, scores, ranks
         gtData = data[dataloader.evalSize:];
         gtWords = [dataloader.ind2word[str(gtData[jj])] \
-                        for jj in xrange(gtData.size(0))];
+                        for jj in range(gtData.size(0))];
         gtInfo = ['%s \t(%f)\t[%d]' \
                     % (gtWords[jj], scores[ii, gtData[jj]], gtRanks[ii, jj])\
-                    for jj in xrange(gtData.size(0))];
+                    for jj in range(gtData.size(0))];
         rowContent.append('\n'.join(gtInfo));
 
         # topN words, scores, ranks
         argScores = scores[ii].numpy();
         topData = argScores.argsort()[-topN:][::-1];
         topWords = [dataloader.ind2word[str(topData[jj])] \
-                        for jj in xrange(topData.shape[0])];
+                        for jj in range(topData.shape[0])];
         topInfo = ['%s \t(%f)\t[%d]' \
                     % (topWords[jj], scores[ii, topData[jj]], jj)\
-                    for jj in xrange(topData.shape[0])];
+                    for jj in range(topData.shape[0])];
         rowContent.append('\n'.join(topInfo));
 
         page.addRow(rowContent);
@@ -162,7 +162,7 @@ def visualizeBatch(dataloader):
     imgSum = batch['image'].sum(1).numpy();
     curSum = imgSum[0];
     count = 0;
-    for ii in xrange(imgSum.shape[0]):
+    for ii in range(imgSum.shape[0]):
         if curSum != imgSum[ii]: count += 1;
         curSum = imgSum[ii];
 
@@ -198,7 +198,7 @@ def evaluateTagging(scores, gtLabels, topAnswers=5, verbose=True):
             gtMat[ii, word] = 1;
 
         # prediction matrix
-        for jj in xrange(topAnswers):
+        for jj in range(topAnswers):
             predMat[ii, predTags[ii, jj]] = 1;
 
     # precision
@@ -250,13 +250,13 @@ def savePredictedTags(scores, groundTruth, dataloader, topN=20):
     imgPath = 'val2014/COCO_val2014_%012d.jpg';
     numImgs = 100;
 
-    for ii in xrange(numImgs):
+    for ii in range(numImgs):
         rowContent = [page.linkImage(imgPath % imgIds[ii])];
         #data = dataloader.getIndexInstance(ii, 'test');
         # set
         #setData = data[:dataloader.evalSize];
         #setWords = [dataloader.ind2word[str(setData[jj])] \
-        #                for jj in xrange(setData.size(0))];
+        #                for jj in range(setData.size(0))];
         #rowContent.append('\n'.join(setWords));
 
         # gt words, scores, ranks

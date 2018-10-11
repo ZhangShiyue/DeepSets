@@ -40,9 +40,9 @@ def selectModel(params):
         combine = nn.Sequential(
                     nn.Linear(2*params['embedSize'], params['hiddenSize']),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize'], params['hiddenSize']/2),
+                    nn.Linear(params['hiddenSize'], params['hiddenSize']//2),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize']/2, 1),
+                    nn.Linear(params['hiddenSize']//2, 1),
                     nn.Sigmoid(),
                     );
     ###########################################################################
@@ -50,9 +50,9 @@ def selectModel(params):
         combine = nn.Sequential(
                     nn.Linear(2*params['embedSize'], params['hiddenSize']),
                     nn.Tanh(),
-                    nn.Linear(params['hiddenSize'], params['hiddenSize']/2),
+                    nn.Linear(params['hiddenSize'], params['hiddenSize']//2),
                     nn.Tanh(),
-                    nn.Linear(params['hiddenSize']/2, 1),
+                    nn.Linear(params['hiddenSize']//2, 1),
                     nn.Sigmoid(),
                     );
     ###########################################################################
@@ -61,9 +61,9 @@ def selectModel(params):
                     SplitSum(params['embedSize']),
                     nn.Linear(params['embedSize'], params['hiddenSize']),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize'], params['hiddenSize']/2),
+                    nn.Linear(params['hiddenSize'], params['hiddenSize']//2),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize']/2, 1),
+                    nn.Linear(params['hiddenSize']//2, 1),
                     nn.Sigmoid(),
                     );
     ###########################################################################
@@ -77,9 +77,9 @@ def selectModel(params):
                     SplitMax(params['hiddenSize']),
                     nn.Linear(params['hiddenSize'], params['hiddenSize']),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize'], params['hiddenSize']/2),
+                    nn.Linear(params['hiddenSize'], params['hiddenSize']//2),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize']/2, 1),
+                    nn.Linear(params['hiddenSize']//2, 1),
                     );
     ###########################################################################
     elif params['modelName'] == 'w2v_sum':
@@ -93,9 +93,9 @@ def selectModel(params):
                     SplitSum(params['hiddenSize']),
                     nn.Linear(params['hiddenSize'], params['hiddenSize']),
                     nn.Tanh(),
-                    nn.Linear(params['hiddenSize'], params['hiddenSize']/2),
+                    nn.Linear(params['hiddenSize'], params['hiddenSize']//2),
                     nn.Tanh(),
-                    nn.Linear(params['hiddenSize']/2, 1),
+                    nn.Linear(params['hiddenSize']//2, 1),
                     );
     ###########################################################################
     elif params['modelName'] == 'w2v_concat':
@@ -107,9 +107,9 @@ def selectModel(params):
         combine = nn.Sequential(
                     nn.Linear(2*params['hiddenSize'], params['hiddenSize']),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize'], params['hiddenSize']/2),
+                    nn.Linear(params['hiddenSize'], params['hiddenSize']//2),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize']/2, 1),
+                    nn.Linear(params['hiddenSize']//2, 1),
                     );
     ###########################################################################
     elif params['modelName'] == 'coco_w2v_simple':
@@ -139,9 +139,9 @@ def selectModel(params):
         combine = nn.Sequential(
                     nn.Linear(2*params['hiddenSize'], params['hiddenSize']),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize'], params['hiddenSize']/2),
+                    nn.Linear(params['hiddenSize'], params['hiddenSize']//2),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize']/2, 1),
+                    nn.Linear(params['hiddenSize']//2, 1),
                     );
         if params['dropout'] > 0:
             imgTransform = nn.Sequential(
@@ -163,23 +163,23 @@ def selectModel(params):
                     Multimodal([params['hiddenSize'], 2 * params['hiddenSize']]),
                     nn.Linear(2 * params['hiddenSize'], params['hiddenSize']),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize'], params['hiddenSize']/2),
+                    nn.Linear(params['hiddenSize'], params['hiddenSize']//2),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize']/2, 1),
+                    nn.Linear(params['hiddenSize']//2, 1),
                     );
         if params['dropout'] > 0:
             imgTransform = nn.Sequential(
-                            nn.Linear(params['featSize'], params['featSize']/2),
+                            nn.Linear(params['featSize'], params['featSize']//2),
                             nn.Dropout(params['dropout']),
                             nn.ReLU(),
-                            nn.Linear(params['featSize']/2, params['hiddenSize']),
+                            nn.Linear(params['featSize']//2, params['hiddenSize']),
                             nn.ReLU(),
                             );
         else:
             imgTransform = nn.Sequential(
-                            nn.Linear(params['featSize'], params['featSize']/2),
+                            nn.Linear(params['featSize'], params['featSize']//2),
                             nn.ReLU(),
-                            nn.Linear(params['featSize']/2, params['hiddenSize']),
+                            nn.Linear(params['featSize']//2, params['hiddenSize']),
                             nn.ReLU(),
                             );
     ###########################################################################
@@ -193,25 +193,25 @@ def selectModel(params):
                     Multimodal([params['hiddenSize'], 2 * params['hiddenSize']]),
                     nn.Linear(2 * params['hiddenSize'], params['hiddenSize']),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize'], params['hiddenSize']/2),
+                    nn.Linear(params['hiddenSize'], params['hiddenSize']//2),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize']/2, 1),
+                    nn.Linear(params['hiddenSize']//2, 1),
                     );
         if params['dropout'] > 0:
             imgTransform = nn.Sequential(
-                            nn.Linear(params['featSize'], params['featSize']/2),
+                            nn.Linear(params['featSize'], params['featSize']//2),
                             nn.Dropout(params['dropout']),
                             nn.ReLU(),
-                            nn.Linear(params['featSize']/2, 2 * params['hiddenSize']),
+                            nn.Linear(params['featSize']//2, 2 * params['hiddenSize']),
                             nn.ReLU(),
                             nn.Linear(2 * params['hiddenSize'], params['hiddenSize']),
                             nn.ReLU(),
                             );
         else:
             imgTransform = nn.Sequential(
-                            nn.Linear(params['featSize'], params['featSize']/2),
+                            nn.Linear(params['featSize'], params['featSize']//2),
                             nn.ReLU(),
-                            nn.Linear(params['featSize']/2, 2 * params['hiddenSize']),
+                            nn.Linear(params['featSize']//2, 2 * params['hiddenSize']),
                             nn.ReLU(),
                             nn.Linear(2 * params['hiddenSize'], params['hiddenSize']),
                             nn.ReLU(),
@@ -227,25 +227,25 @@ def selectModel(params):
                     MultimodalSum([params['hiddenSize'], 2 * params['hiddenSize']]),
                     nn.Linear(params['hiddenSize'], params['hiddenSize']),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize'], params['hiddenSize']/2),
+                    nn.Linear(params['hiddenSize'], params['hiddenSize']//2),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize']/2, 1),
+                    nn.Linear(params['hiddenSize']//2, 1),
                     );
         if params['dropout'] > 0:
             imgTransform = nn.Sequential(
-                            nn.Linear(params['featSize'], params['featSize']/2),
+                            nn.Linear(params['featSize'], params['featSize']//2),
                             nn.Dropout(params['dropout']),
                             nn.ReLU(),
-                            nn.Linear(params['featSize']/2, 2 * params['hiddenSize']),
+                            nn.Linear(params['featSize']//2, 2 * params['hiddenSize']),
                             nn.ReLU(),
                             nn.Linear(2 * params['hiddenSize'], params['hiddenSize']),
                             nn.ReLU(),
                             );
         else:
             imgTransform = nn.Sequential(
-                            nn.Linear(params['featSize'], params['featSize']/2),
+                            nn.Linear(params['featSize'], params['featSize']//2),
                             nn.ReLU(),
-                            nn.Linear(params['featSize']/2, 2 * params['hiddenSize']),
+                            nn.Linear(params['featSize']//2, 2 * params['hiddenSize']),
                             nn.ReLU(),
                             nn.Linear(2 * params['hiddenSize'], params['hiddenSize']),
                             nn.ReLU(),
@@ -256,9 +256,9 @@ def selectModel(params):
                     SplitSum(params['embedSize']),
                     nn.Linear(params['embedSize'], params['hiddenSize']),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize'], params['hiddenSize']/2),
+                    nn.Linear(params['hiddenSize'], params['hiddenSize']//2),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize']/2, 1),
+                    nn.Linear(params['hiddenSize']//2, 1),
                     #nn.ReLU(),
                     nn.Sigmoid(),
                     );
@@ -277,9 +277,9 @@ def selectModel(params):
         combine = nn.Sequential(
                     nn.Linear(2*params['embedSize'], params['hiddenSize']),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize'], params['hiddenSize']/2),
+                    nn.Linear(params['hiddenSize'], params['hiddenSize']//2),
                     nn.ReLU(),
-                    nn.Linear(params['hiddenSize']/2, 1),
+                    nn.Linear(params['hiddenSize']//2, 1),
                     #nn.ReLU(),
                     nn.Sigmoid(),
                     );

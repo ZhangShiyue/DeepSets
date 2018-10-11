@@ -87,7 +87,7 @@ loss = None;
 bestMRR = 0;
 
 print('\nTraining:')
-for loopId in xrange(1, options['iterPerEpoch'] * options['numEpochs']):
+for loopId in range(1, int(options['iterPerEpoch'] * options['numEpochs'])):
     # Reset gradients, perform training step, update
     optimizer.zero_grad();
     curLoss = model.trainStep(dl);
@@ -106,7 +106,7 @@ for loopId in xrange(1, options['iterPerEpoch'] * options['numEpochs']):
             path = options['savePath'] + 'best_model.t7';
             model.save(path);
 
-    if loss == None: loss = curLoss;
+    if loss is None: loss = curLoss;
     else: loss = 0.95 * loss + 0.05 * curLoss;
 
     # Print info

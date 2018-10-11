@@ -144,7 +144,7 @@ class Deepset(nn.Container):
                 argEmbed = bottle(self.wordTransform, Variable(argInds));
                 argScore = self.scoreInstanceSet(argEmbed, setEmbed);
                 # save scores for this batch
-                batchScores[:, ii:end] = argScore.data.float();
+                batchScores[:, ii:end] = argScore.data.float().squeeze();
 
             # Assign the set least possible score (-Inf) to set elements
             rangeInds = torch.arange(0, batchSize).long();
@@ -176,7 +176,8 @@ class Deepset(nn.Container):
                                                 'imageId': imageIds};
 
     # Initialize word embeddings
-    def initEmbeddings(self, (embeds, inds)):
+    def initEmbeddings(self, inps):
+        embeds, inds = inps
         weight = self.embedder.weight.data;
         # Assign embeds
         for row in inds: weight[row] = torch.from_numpy(embeds[row]);
