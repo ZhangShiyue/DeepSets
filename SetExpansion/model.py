@@ -9,6 +9,7 @@ import zoo
 from utilities import *
 from tqdm import tqdm as progressbar
 from scipy.stats import rankdata
+from SubLayers import MultiHeadAttention
 
 class Deepset(nn.Container):
     def __init__(self, params):
@@ -42,6 +43,7 @@ class Deepset(nn.Container):
 
         # Set pooling operation for set
         #self.pooler = torch.max; #torch.mean;
+        self.selfatt = MultiHeadAttention(1,params['hiddenSize'],params['hiddenSize'],params['hiddenSize'])
         self.pooler = torch.sum; #torch.mean;
 
         # Initialize the parameters with xavier
@@ -73,6 +75,7 @@ class Deepset(nn.Container):
         # TODO: this is bad! Breaks the history, works only for w2v models
         if self.setSize == 0: setEmbed.data.fill_(0.0);
 
+        setEmbed, _ = self.selfatt(setEmbed, setEmbed, setEmbed)
         setEmbed = self.pooler(setEmbed, 1);
         if type(setEmbed).__name__ == 'tuple': setEmbed = setEmbed[0];
         setEmbed = setEmbed.squeeze();
@@ -120,7 +123,7 @@ class Deepset(nn.Container):
             setEmbed = bottle(self.wordTransform, Variable(batch['set']));
             # if set is empty, reset to zero
             if self.setSize == 0: setEmbed.data.fill_(0.0);
-
+            setEmbed, _ = self.selfatt(setEmbed, setEmbed, setEmbed)
             setEmbed = self.pooler(setEmbed, 1);
             if type(setEmbed).__name__ == 'tuple': setEmbed = setEmbed[0];
             setEmbed = setEmbed.squeeze();
@@ -189,6 +192,7 @@ class Deepset(nn.Container):
         content = {'combine': self.combine,\
                     'embedder': self.embedder, \
                     'postEmbedder': self.postEmbedder, \
+                    'selfatt':self.selfatt, \
                     'pooler': self.pooler, \
                     'params': self.params};
         if hasattr(self, 'imgTransform'):
@@ -200,7 +204,7 @@ class Deepset(nn.Container):
         content = torch.load(loadPath);
 
         flags = ['params', 'embedder', 'postEmbedder', 'combine', \
-                'pooler', 'imgTransform'];
+                'selfatt', 'pooler', 'imgTransform'];
 
         for flag in flags:
             if flag in content: setattr(self, flag, content[flag]);
