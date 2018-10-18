@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 # from loglinear import LogLinear
+from SubLayers import MultiHeadAttention
 
 class DeepSet(nn.Module):
 
@@ -26,7 +27,7 @@ class DeepSet(nn.Module):
             nn.ELU(inplace=True),
             nn.Linear(10, 1),
         )
-        
+        self.selfatt = MultiHeadAttention(1, 50, 50, 50)
         self.add_module('0', self.feature_extractor)
         self.add_module('1', self.regressor)
         
@@ -40,6 +41,7 @@ class DeepSet(nn.Module):
     def forward(self, input):
         x = input
         x = self.feature_extractor(x)
+        x, _ = self.selfatt(x, x, x)
         x = x.sum(dim=1)
         x = self.regressor(x)
         return x

@@ -84,38 +84,38 @@ class Trainer(object):
             log_scalar(train_writer, 'test_mae', test_mae, j + 1)
             log_scalar(train_writer, 'test_mse', test_mse, j + 1)
 
-        for j in trange(self.num_epochs, desc="Epochs: "):
-            train_iterator = train.get_iterator(train_loss)
-            for X, y in train_iterator:
-                # pdb.set_trace()
-                self.optim.zero_grad()
-                y_pred = self.model(Variable(torch.from_numpy(X)).cuda())
-                loss = self.l1(y_pred, Variable(torch.from_numpy(np.reshape(y, [len(y), 1])).cuda()))
-                loss_val = np.asscalar(loss.data.cpu().numpy())
-                train_loss = 0.9 * train_loss + 0.1 * loss_val
-                loss.backward()
-                self.optim.step()
-                train_iterator.set_description(
-                        'Train loss: {0:.4f}'.format(train_loss))
-
-            test_mae, test_mse = self.evaluate(valid)
-            if test_mae < best_mae:
-                best_mae = test_mae
-                torch.save(self.model, self.out_dir + 'best_mae_model.pth')
-            if test_mse < best_mse:
-                best_mse = test_mse
-                torch.save(self.model, self.out_dir + 'best_mse_model.pth')
-
-            tqdm.write(
-                    'After epoch {0} Test MAE: {1:0.6g} Best MAE: {2:0.6g} Test MSE: {3:0.6g} Best MSE: {4:0.6g} '
-                    'Train Loss: {5:0.6f}'.format(
-                            j + 1, test_mae, best_mae, test_mse, best_mse, train_loss))
-
-            self.visualize(valid)
-
-            log_scalar(train_writer, 'train_loss', train_loss, self.num_epochs + j + 1)
-            log_scalar(train_writer, 'test_mae', test_mae, self.num_epochs + j + 1)
-            log_scalar(train_writer, 'test_mse', test_mse, self.num_epochs + j + 1)
+        # for j in trange(self.num_epochs, desc="Epochs: "):
+        #     train_iterator = train.get_iterator(train_loss)
+        #     for X, y in train_iterator:
+        #         # pdb.set_trace()
+        #         self.optim.zero_grad()
+        #         y_pred = self.model(Variable(torch.from_numpy(X)).cuda())
+        #         loss = self.l1(y_pred, Variable(torch.from_numpy(np.reshape(y, [len(y), 1])).cuda()))
+        #         loss_val = np.asscalar(loss.data.cpu().numpy())
+        #         train_loss = 0.9 * train_loss + 0.1 * loss_val
+        #         loss.backward()
+        #         self.optim.step()
+        #         train_iterator.set_description(
+        #                 'Train loss: {0:.4f}'.format(train_loss))
+        #
+        #     test_mae, test_mse = self.evaluate(valid)
+        #     if test_mae < best_mae:
+        #         best_mae = test_mae
+        #         torch.save(self.model, self.out_dir + 'best_mae_model.pth')
+        #     if test_mse < best_mse:
+        #         best_mse = test_mse
+        #         torch.save(self.model, self.out_dir + 'best_mse_model.pth')
+        #
+        #     tqdm.write(
+        #             'After epoch {0} Test MAE: {1:0.6g} Best MAE: {2:0.6g} Test MSE: {3:0.6g} Best MSE: {4:0.6g} '
+        #             'Train Loss: {5:0.6f}'.format(
+        #                     j + 1, test_mae, best_mae, test_mse, best_mse, train_loss))
+        #
+        #     self.visualize(valid)
+        #
+        #     log_scalar(train_writer, 'train_loss', train_loss, self.num_epochs + j + 1)
+        #     log_scalar(train_writer, 'test_mae', test_mae, self.num_epochs + j + 1)
+        #     log_scalar(train_writer, 'test_mse', test_mse, self.num_epochs + j + 1)
 
         return best_mae, best_mse
 
@@ -167,10 +167,10 @@ if __name__ == '__main__':
     if not os.path.exists(odir):
         os.makedirs(odir)
 
-    f1 = open(odir + 'stdout.txt', 'w')
-    f2 = open(odir + 'stderr.txt', 'w')
-    sys.stdout = f1
-    sys.stderr = f2
+    # f1 = open(odir + 'stdout.txt', 'w')
+    # f2 = open(odir + 'stderr.txt', 'w')
+    # sys.stdout = f1
+    # sys.stderr = f2
     print('Running Task {0} with L = 2^{1}'.format(task_id, exp_id))
 
     # Load dataset
@@ -195,5 +195,5 @@ if __name__ == '__main__':
     print('Test set evaluation: ')
     print('\t MAE: {0:0.6g} \t MSE: {1:0.6g}'.format(a, b))
 
-    f1.close()
-    f2.close()
+    # f1.close()
+    # f2.close()
