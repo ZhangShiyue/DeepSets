@@ -15,7 +15,7 @@ batch_size = 64
 downsample = 10    #For 5000 points use 2, for 1000 use 10, for 100 use 100
 network_dim = 256  #For 5000 points use 512, for 1000 use 256, for 100 use 256
 num_repeats = 5    #Number of times to repeat the experiment
-data_path = 'ModelNet40_cloud.h5'
+data_path = 'sources/data.h5'
 #################### Settings ##############################
 
 
@@ -35,6 +35,7 @@ class PointCloudTrainer(object):
         self.D.train()
         loss_val = float('inf')
         for j in trange(num_epochs, desc="Epochs: "):
+        #for j in range(num_epochs):
             counts = 0
             sum_acc = 0.0
             train_data = self.model_fetcher.train_data(loss_val)
@@ -45,8 +46,8 @@ class PointCloudTrainer(object):
                 self.optimizer.zero_grad()
                 f_X = self.D(X)
                 loss = self.L(f_X, Y)
-                loss_val = loss.data.cpu().numpy()[0]
-                sum_acc += (f_X.max(dim=1)[1] == Y).float().sum().data.cpu().numpy()[0]
+                loss_val = loss.data.cpu().numpy()
+                sum_acc += (f_X.max(dim=1)[1] == Y).float().sum().data.cpu().numpy()
                 train_data.set_description('Train loss: {0:.4f}'.format(loss_val))
                 loss.backward()
                 classifier.clip_grad(self.D, 5)
@@ -66,7 +67,7 @@ class PointCloudTrainer(object):
             X = Variable(torch.cuda.FloatTensor(x))
             Y = Variable(torch.cuda.LongTensor(y))
             f_X = self.D(X)
-            sum_acc += (f_X.max(dim=1)[1] == Y).float().sum().data.cpu().numpy()[0]
+            sum_acc += (f_X.max(dim=1)[1] == Y).float().sum().data.cpu().numpy()
             del X,Y,f_X
         test_acc = sum_acc/counts
         print('Final Test Accuracy: {0:0.3f}'.format(test_acc))

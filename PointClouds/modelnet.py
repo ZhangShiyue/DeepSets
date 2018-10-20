@@ -47,9 +47,9 @@ class ModelFetcher(object):
 
         with h5py.File(fname, 'r') as f:
             self._train_data = np.array(f['tr_cloud'])
-            self._train_label = np.array(f['tr_labels'])
+            self._train_label = np.array(f['tr_label'])
             self._test_data = np.array(f['test_cloud'])
-            self._test_label = np.array(f['test_labels'])
+            self._test_label = np.array(f['test_label'])
 
         self.num_classes = np.max(self._train_label) + 1
 
