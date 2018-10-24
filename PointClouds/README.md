@@ -23,7 +23,7 @@ Change `#Setup network` part in `run.py` to change the model
 
 ## Baseline Experiments
 
-Once you have the data file with the name `ModelNet40_cloud.h5` in this directory, you may simply run
+Once you have the data file prepared, you may simply run
 
     python3 run.py
 
