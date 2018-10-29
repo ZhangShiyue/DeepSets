@@ -19,7 +19,7 @@ class DeepSet(nn.Module):
         )
 
         self.regressor = nn.Sequential(
-            nn.Linear(set_features, 30),
+            nn.Linear(set_features * 2, 30),
             nn.ELU(inplace=True),
             nn.Linear(30, 30),
             nn.ELU(inplace=True),
@@ -40,8 +40,11 @@ class DeepSet(nn.Module):
             
     def forward(self, input):
         x = input
+        print(x.shape)
+        exit()
         x = self.feature_extractor(x)
-        _, x, _ = self.selfatt(x, x, x)
+        _, x1, _ = self.selfatt(x, x, x)
+        x = torch.cat((x1, x), 2)
         x = x.sum(dim=1)
         x = self.regressor(x)
         return x
