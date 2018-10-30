@@ -12,6 +12,7 @@ class ScaledDotProductAttention(nn.Module):
         self.temperature = temperature
         self.dropout = nn.Dropout(attn_dropout)
         self.softmax = nn.Softmax(dim=2)
+        self.tanh = nn.Tanh()
 
     def forward(self, q, k, v, mask=None):
 
@@ -21,7 +22,8 @@ class ScaledDotProductAttention(nn.Module):
         if mask is not None:
             attn = attn.masked_fill(mask, -np.inf)
 
-        attn = self.softmax(attn)
+        # attn = self.softmax(attn)
+        attn = self.tanh(attn)
         attn = self.dropout(attn)
         output = torch.bmm(attn, v)
 
