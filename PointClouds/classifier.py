@@ -14,12 +14,12 @@ class PermEqui1_max(nn.Module):
     def __init__(self, in_dim, out_dim):
         super(PermEqui1_max, self).__init__()
         self.Gamma = nn.Linear(in_dim, out_dim)
-        # self.selfatt = MultiHeadAttention(1, 3, 32, 3, dropout=0.)
+        self.attn = MultiHeadAttention(1, in_dim, out_dim, in_dim, dropout=0.)
 
     def forward(self, x):
-        # x1, _ = self.selfatt(x, x, x)
-        xm, _ = x.max(1, keepdim=True)
-        x = self.Gamma(x - xm)
+        xa, _ = self.attn(x, x, x)
+        # xm, _ = x.max(1, keepdim=True)
+        x = self.Gamma(x - xa)
         return x
 
 
