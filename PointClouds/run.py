@@ -12,7 +12,7 @@ import modelnet
 #################### Settings ##############################
 num_epochs = 1000
 batch_size = 64
-downsample = 10    #For 5000 points use 2, for 1000 use 10, for 100 use 100
+downsample = 100    #For 5000 points use 2, for 1000 use 10, for 100 use 100
 network_dim = 256  #For 5000 points use 512, for 1000 use 256, for 100 use 256
 num_repeats = 5    #Number of times to repeat the experiment
 data_path = 'sources/data.h5'
@@ -83,6 +83,7 @@ if __name__ == "__main__":
         test_accs.append(acc)
         print('='*30 + ' Finish Run {0}/{1} '.format(i+1, num_repeats) + '='*30)
     print('\n')
+    print(test_accs)
     if num_repeats > 2:
         try:
             print('Test accuracy: {0:0.2f} '.format(np.mean(test_accs)) + unichr(177).encode('utf-8') + ' {0:0.3f} '.format(np.std(test_accs)))
