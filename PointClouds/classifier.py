@@ -13,13 +13,13 @@ from SubLayers import MultiHeadAttention
 class PermEqui1_max(nn.Module):
     def __init__(self, in_dim, out_dim):
         super(PermEqui1_max, self).__init__()
-        self.Gamma = nn.Linear(in_dim, out_dim)
+        self.Gamma = nn.Linear(in_dim * 2, out_dim)
         self.attn = MultiHeadAttention(1, in_dim, out_dim, in_dim, dropout=0.)
 
     def forward(self, x):
         xa, _ = self.attn(x, x, x)
-        xm, _ = xa.max(1, keepdim=True)
-        x = self.Gamma(x - xm)
+        # xm, _ = xa.max(1, keepdim=True)
+        x = self.Gamma(torch.cat((x, xa), 2))
         return x
 
 
