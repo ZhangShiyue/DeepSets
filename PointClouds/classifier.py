@@ -18,8 +18,8 @@ class PermEqui1_max(nn.Module):
 
     def forward(self, x):
         xa, _ = self.attn(x, x, x)
-        # xm, _ = x.max(1, keepdim=True)
-        x = self.Gamma(x - xa)
+        xm, _ = xa.max(1, keepdim=True)
+        x = self.Gamma(x - xm)
         return x
 
 

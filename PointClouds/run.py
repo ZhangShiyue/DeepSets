@@ -83,9 +83,8 @@ if __name__ == "__main__":
         test_accs.append(acc)
         print('='*30 + ' Finish Run {0}/{1} '.format(i+1, num_repeats) + '='*30)
     print('\n')
-    print(test_accs)
     if num_repeats > 2:
         try:
             print('Test accuracy: {0:0.2f} '.format(np.mean(test_accs)) + unichr(177).encode('utf-8') + ' {0:0.3f} '.format(np.std(test_accs)))
         except:
-            print('Test accuracy: {0:0.2f} +/-  {0:0.3f} '.format(np.mean(test_accs), np.std(test_accs)))
+            print('Test accuracy: {0:0.2f} +/-  {1:0.3f} '.format(np.mean(test_accs), np.std(test_accs)))
