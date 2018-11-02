@@ -18,18 +18,18 @@ class MultiHeadAttention(nn.Module):
 
         self.w_qs = nn.Linear(d_model, n_head * d_k)
         self.w_ks = nn.Linear(d_model, n_head * d_k)
-        # self.w_vs = nn.Linear(d_model, n_head * d_v)
+        self.w_vs = nn.Linear(d_model, n_head * d_v)
         nn.init.normal_(self.w_qs.weight, mean=0, std=np.sqrt(2.0 / (d_model + d_k)))
         nn.init.normal_(self.w_ks.weight, mean=0, std=np.sqrt(2.0 / (d_model + d_k)))
-        # nn.init.normal_(self.w_vs.weight, mean=0, std=np.sqrt(2.0 / (d_model + d_v)))
+        nn.init.normal_(self.w_vs.weight, mean=0, std=np.sqrt(2.0 / (d_model + d_v)))
 
         self.attention = ScaledDotProductAttention(temperature=np.power(d_k, 0.5), attn_dropout=dropout)
-        # self.layer_norm = nn.LayerNorm(d_model)
+        self.layer_norm = nn.LayerNorm(d_model)
 
-        # self.fc = nn.Linear(n_head * d_v, d_model)
-        # nn.init.xavier_normal_(self.fc.weight)
+        self.fc = nn.Linear(n_head * d_v, d_model)
+        nn.init.xavier_normal_(self.fc.weight)
 
-        # self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(dropout)
 
 
     def forward(self, q, k, v, mask=None):
@@ -44,7 +44,7 @@ class MultiHeadAttention(nn.Module):
 
         q = self.w_qs(q).view(sz_b, len_q, n_head, d_k)
         k = self.w_ks(k).view(sz_b, len_k, n_head, d_k)
-        v = v.view(sz_b, len_v, n_head, d_v)
+        v = self.w_vs(v).view(sz_b, len_v, n_head, d_v)
 
         q = q.permute(2, 0, 1, 3).contiguous().view(-1, len_q, d_k) # (n*b) x lq x dk
         k = k.permute(2, 0, 1, 3).contiguous().view(-1, len_k, d_k) # (n*b) x lk x dk
@@ -57,9 +57,8 @@ class MultiHeadAttention(nn.Module):
         output = output.view(n_head, sz_b, len_q, d_v)
         output = output.permute(1, 2, 0, 3).contiguous().view(sz_b, len_q, -1) # b x lq x (n*dv)
 
-        # output = self.dropout(self.fc(output))
-        # output = self.layer_norm(output + residual)
-        # output1 = self.layer_norm(output)
+        output = self.dropout(self.fc(output))
+        output = self.layer_norm(output + residual)
 
         return output, attn
 

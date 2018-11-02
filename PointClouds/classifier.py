@@ -10,16 +10,27 @@ from tqdm import tqdm, trange
 from SubLayers import MultiHeadAttention
 
 
+class PermEqui_attn(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super(PermEqui_attn, self).__init__()
+        self.Gamma = nn.Linear(in_dim, out_dim)
+        self.attn = MultiHeadAttention(1, in_dim, out_dim, out_dim)
+        self.layer_norm = nn.LayerNorm(in_dim)
+
+    def forward(self, x):
+        x, _ = self.attn(x, x, x)
+        x = self.layer_norm(self.Gamma(x) + x)
+        return x
+
+
 class PermEqui1_max(nn.Module):
     def __init__(self, in_dim, out_dim):
         super(PermEqui1_max, self).__init__()
-        self.Gamma = nn.Linear(in_dim * 2, out_dim)
-        self.attn = MultiHeadAttention(1, in_dim, out_dim, in_dim, dropout=0.)
+        self.Gamma = nn.Linear(in_dim, out_dim)
 
     def forward(self, x):
-        xa, _ = self.attn(x, x, x)
-        # xm, _ = xa.max(1, keepdim=True)
-        x = self.Gamma(torch.cat((x, xa), 2))
+        xm, _ = x.max(1, keepdim=True)
+        x = self.Gamma(x - xm)
         return x
 
 
@@ -163,6 +174,15 @@ class DTanh(nn.Module):
                 PermEqui1_mean(self.d_dim, self.d_dim),
                 nn.Tanh(),
             )
+        elif pool == 'attn':
+            self.phi = nn.Sequential(
+                PermEqui1_max(self.x_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui_attn(self.d_dim, self.d_dim),
+                nn.Tanh(),
+                # PermEqui_attn(self.d_dim, self.d_dim),
+                # nn.Tanh(),
+            )
 
         self.ro = nn.Sequential(
             nn.Dropout(p=0.5),
@@ -171,7 +191,6 @@ class DTanh(nn.Module):
             nn.Dropout(p=0.5),
             nn.Linear(self.d_dim, 40),
         )
-        print(self)
 
     def forward(self, x):
         phi_output = self.phi(x)
