@@ -23,6 +23,19 @@ class PermEqui_attn(nn.Module):
         return x
 
 
+class PermEqui_attn1(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super(PermEqui_attn1, self).__init__()
+        self.Gamma = nn.Linear(in_dim, out_dim)
+        self.attn = MultiHeadAttention(1, in_dim, out_dim, out_dim)
+        self.layer_norm = nn.LayerNorm(out_dim)
+
+    def forward(self, x):
+        x, _ = self.attn(x, x, x)
+        x = self.layer_norm(self.Gamma(x))
+        return x
+
+
 class PermEqui1_max(nn.Module):
     def __init__(self, in_dim, out_dim):
         super(PermEqui1_max, self).__init__()
@@ -181,6 +194,15 @@ class DTanh(nn.Module):
                 PermEqui_attn(self.d_dim, self.d_dim),
                 nn.Tanh(),
                 PermEqui_attn(self.d_dim, self.d_dim),
+                nn.Tanh(),
+            )
+        elif pool == 'attn1':
+            self.phi = nn.Sequential(
+                PermEqui_attn1(self.x_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui_attn1(self.d_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui_attn1(self.d_dim, self.d_dim),
                 nn.Tanh(),
             )
 
