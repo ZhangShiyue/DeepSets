@@ -180,8 +180,8 @@ class DTanh(nn.Module):
                 nn.Tanh(),
                 PermEqui_attn(self.d_dim, self.d_dim),
                 nn.Tanh(),
-                # PermEqui_attn(self.d_dim, self.d_dim),
-                # nn.Tanh(),
+                PermEqui_attn(self.d_dim, self.d_dim),
+                nn.Tanh(),
             )
 
         self.ro = nn.Sequential(
