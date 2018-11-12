@@ -4,6 +4,7 @@
 import torch
 import torch.nn as nn
 import pdb
+from SubLayers import MultiHeadAttention
 
 # identity module
 class Identity(nn.Container):
@@ -29,6 +30,58 @@ class SplitSum(nn.Container):
             firstHalf = inTensor[:, :, :self.splitSize];
             secondHalf = inTensor[:, :, self.splitSize:];
         return firstHalf + secondHalf;
+
+# module to split at a given point and sum
+class SplitInfer(nn.Container):
+    def __init__(self, splitSize):
+        super(SplitInfer, self).__init__();
+        self.splitSize = splitSize; # where to split
+
+    def forward(self, inTensor):
+        # Split along particular dimension
+        # If only two dims
+        if inTensor.dim() == 2:
+            firstHalf = inTensor[:, :self.splitSize];
+            secondHalf = inTensor[:, self.splitSize:];
+            subtraction = firstHalf - secondHalf
+            multiplication = firstHalf * secondHalf
+            result = torch.cat((firstHalf, secondHalf, subtraction, multiplication), 1)
+        else:
+            firstHalf = inTensor[:, :, :self.splitSize];
+            secondHalf = inTensor[:, :, self.splitSize:];
+            subtraction = firstHalf - secondHalf
+            multiplication = firstHalf * secondHalf
+            result = torch.cat((firstHalf, secondHalf, subtraction, multiplication), 2)
+        return result
+
+class LocalPoolAtt(nn.Module):
+    def __init__(self, hiddenSize):
+        super(LocalPoolAtt, self).__init__()
+        self.selfatt = MultiHeadAttention(1, hiddenSize, hiddenSize, hiddenSize)
+    def forward(self, inTensor):
+        #if inTensor.dim()==2:
+        #    pool = torch.max(inTensor, 0)[0]
+        #    pool = pool.expand(inTensor.shape[0],-1)
+        #    att, _  = self.selfatt(inTensor, inTensor, inTensor)
+        #    result = torch.cat((inTensor, pool, att), 1)
+        #else:
+        #print(inTensor.shape)
+        #print(inTensor.shape)
+        #pool = torch.max(inTensor, 1)[0]
+        pool = torch.mean(inTensor, 1)
+        #print(pool.shape)
+        pool = pool.expand(inTensor.shape[1], inTensor.shape[0],-1)
+        #print(pool.shape)
+        pool = pool.transpose(0,1)
+        #print(inTensor.shape)
+        att, _  = self.selfatt(inTensor, inTensor, inTensor)
+        #print(att.shape)
+        result = torch.cat((inTensor, inTensor), 2)
+        #print(result.shape)
+        return att
+
+
+
 
 # module to split at a given point and sum
 class Multimodal(nn.Container):

@@ -98,6 +98,43 @@ def selectModel(params):
                     nn.Linear(params['hiddenSize']//2, 1),
                     );
     ###########################################################################
+    elif params['modelName'] == 'w2v_sum_infer':
+        postEmbedder = nn.Sequential(
+                        nn.Linear(params['embedSize'], params['hiddenSize']),
+                        nn.Tanh(),
+                        nn.Linear(params['hiddenSize'], params['hiddenSize']),
+                        nn.Tanh(),
+                    );
+        combine = nn.Sequential(
+                    SplitInfer(params['hiddenSize']),
+                    nn.Linear(4*params['hiddenSize'], params['hiddenSize']),
+                    nn.Tanh(),
+                    nn.Linear(params['hiddenSize'], params['hiddenSize']//2),
+                    nn.Tanh(),
+                    nn.Linear(params['hiddenSize']//2, 1),
+                    );
+    ###########################################################################
+    elif params['modelName'] == 'w2v_sum_localpoolatt':
+        postEmbedder = nn.Sequential(
+                        nn.Linear(params['embedSize'], params['hiddenSize']),
+                        nn.Tanh(),
+                        nn.Linear(params['hiddenSize'], params['hiddenSize']),
+                        #nn.Dropout(params['dropout']),
+                        nn.Tanh(),
+                        LocalPoolAtt(params['hiddenSize']),
+                        nn.Linear(1*params['hiddenSize'], params['hiddenSize']),
+                    );
+        combine = nn.Sequential(
+                    SplitSum(params['hiddenSize']),
+                    nn.Linear(params['hiddenSize'], params['hiddenSize']),
+                    #nn.Dropout(params['dropout']),
+                    nn.Tanh(),
+                    nn.Linear(params['hiddenSize'], params['hiddenSize']//2),
+                    #nn.Dropout(params['dropout']),
+                    nn.Tanh(),
+                    nn.Linear(params['hiddenSize']//2, 1),
+                    );
+    ###########################################################################
     elif params['modelName'] == 'w2v_concat':
         postEmbedder = nn.Sequential(
                         nn.Linear(params['embedSize'], params['hiddenSize']),

@@ -66,7 +66,7 @@ for name in toFreeze:
 
 # layers to optimize
 #toLearn = ['postEmbedder', 'combine', 'imgTransform'];
-toLearn = ['embedder', 'postEmbedder', 'combine', 'imgTransform'];
+toLearn = ['embedder', 'postEmbedder', 'combine', 'imgTransform', 'selfatt'];
 optimArgs = []; # arguments to optimizer
 for name in toLearn:
     # if module not found, ignore

@@ -75,7 +75,8 @@ class Deepset(nn.Container):
         # TODO: this is bad! Breaks the history, works only for w2v models
         if self.setSize == 0: setEmbed.data.fill_(0.0);
 
-        setEmbed, _ = self.selfatt(setEmbed, setEmbed, setEmbed)
+        attvec, _ = self.selfatt(setEmbed, setEmbed, setEmbed)
+        setEmbed = attvec
         setEmbed = self.pooler(setEmbed, 1);
         if type(setEmbed).__name__ == 'tuple': setEmbed = setEmbed[0];
         setEmbed = setEmbed.squeeze();
@@ -123,7 +124,8 @@ class Deepset(nn.Container):
             setEmbed = bottle(self.wordTransform, Variable(batch['set']));
             # if set is empty, reset to zero
             if self.setSize == 0: setEmbed.data.fill_(0.0);
-            setEmbed, _ = self.selfatt(setEmbed, setEmbed, setEmbed)
+            attvec, _ = self.selfatt(setEmbed, setEmbed, setEmbed)
+            setEmbed = attvec
             setEmbed = self.pooler(setEmbed, 1);
             if type(setEmbed).__name__ == 'tuple': setEmbed = setEmbed[0];
             setEmbed = setEmbed.squeeze();

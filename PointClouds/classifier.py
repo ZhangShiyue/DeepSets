@@ -7,6 +7,19 @@ import torch.autograd as autograd
 import h5py
 import pdb
 from tqdm import tqdm, trange
+from SubLayers import MultiHeadAttention
+
+class PermEqui1_att(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super(PermEqui1_att, self).__init__()
+        self.self_att = MultiHeadAttention(1, in_dim, in_dim, in_dim)
+        self.Gamma = nn.Linear(in_dim, out_dim)
+    
+    def forward(self, x, mask):
+        att_out, _  =  self.self_att(x, mask)
+        xm, _ = x.max(1, keepdim=True)
+        x = self.Gamma(x-xm)
+        return x
 
 class PermEqui1_max(nn.Module):
   def __init__(self, in_dim, out_dim):
@@ -119,6 +132,184 @@ class DTanh(nn.Module):
 
   def __init__(self, d_dim, x_dim=3, pool = 'mean'):
     super(DTanh, self).__init__()
+    self.d_dim = d_dim
+    self.x_dim = x_dim
+
+    if pool == 'max':
+        self.phi = nn.Sequential(
+          PermEqui2_max(self.x_dim, self.d_dim),
+          nn.Tanh(),
+          PermEqui2_max(self.d_dim, self.d_dim),
+          nn.Tanh(),
+          PermEqui2_max(self.d_dim, self.d_dim),
+          nn.Tanh(),
+        )
+    elif pool == 'max1':
+        self.phi = nn.Sequential(
+          PermEqui1_max(self.x_dim, self.d_dim),
+          nn.Tanh(),
+          PermEqui1_max(self.d_dim, self.d_dim),
+          nn.Tanh(),
+          PermEqui1_max(self.d_dim, self.d_dim),
+          nn.Tanh(),
+        )
+    elif pool == 'mean':
+        self.phi = nn.Sequential(
+          PermEqui2_mean(self.x_dim, self.d_dim),
+          nn.Tanh(),
+          PermEqui2_mean(self.d_dim, self.d_dim),
+          nn.Tanh(),
+          PermEqui2_mean(self.d_dim, self.d_dim),
+          nn.Tanh(),
+        )
+    elif pool == 'mean1':
+        self.phi = nn.Sequential(
+          PermEqui1_mean(self.x_dim, self.d_dim),
+          nn.Tanh(),
+          PermEqui1_mean(self.d_dim, self.d_dim),
+          nn.Tanh(),
+          PermEqui1_mean(self.d_dim, self.d_dim),
+          nn.Tanh(),
+        )
+
+    self.ro = nn.Sequential(
+       nn.Dropout(p=0.5),
+       nn.Linear(self.d_dim, self.d_dim),
+       nn.Tanh(),
+       nn.Dropout(p=0.5),
+       nn.Linear(self.d_dim, 40),
+    )
+    print(self)
+
+  def forward(self, x):
+    phi_output = self.phi(x)
+    sum_output, _ = phi_output.max(1)
+    ro_output = self.ro(sum_output)
+    return ro_output
+
+
+def clip_grad(model, max_norm):
+    total_norm = 0
+    for p in model.parameters():
+        param_norm = p.grad.data.norm(2)
+        total_norm += param_norm ** 2
+    total_norm = total_norm ** (0.5)
+    clip_coef = max_norm / (total_norm + 1e-6)
+    if clip_coef < 1:
+        for p in model.parameters():
+            p.grad.data.mul_(clip_coef)
+    return total_norm
+
+
+class LocalAttention(nn.Module):
+
+  def __init__(self, d_dim, x_dim=3, pool = 'mean'):
+    super(LocalAttention, self).__init__()
+    self.d_dim = d_dim
+    self.x_dim = x_dim
+
+    if pool == 'max':
+        self.phi = nn.Sequential(
+          PermEqui2_max(self.x_dim, self.d_dim),
+          nn.Tanh(),
+          PermEqui2_max(self.d_dim, self.d_dim),
+          nn.Tanh(),
+          PermEqui2_max(self.d_dim, self.d_dim),
+          nn.Tanh(),
+        )
+    elif pool == 'max1':
+        self.phi = nn.Sequential(
+          PermEqui1_max(self.x_dim, self.d_dim),
+          nn.Tanh(),
+          PermEqui1_max(self.d_dim, self.d_dim),
+          nn.Tanh(),
+          PermEqui1_max(self.d_dim, self.d_dim),
+          nn.Tanh(),
+        )
+    elif pool == 'mean':
+        self.phi = nn.Sequential(
+          PermEqui2_mean(self.x_dim, self.d_dim),
+          nn.Tanh(),
+          PermEqui2_mean(self.d_dim, self.d_dim),
+          nn.Tanh(),
+          PermEqui2_mean(self.d_dim, self.d_dim),
+          nn.Tanh(),
+        )
+    elif pool == 'mean1':
+        self.phi = nn.Sequential(
+          PermEqui1_mean(self.x_dim, self.d_dim),
+          nn.Tanh(),
+          PermEqui1_mean(self.d_dim, self.d_dim),
+          nn.Tanh(),
+          PermEqui1_mean(self.d_dim, self.d_dim),
+          nn.Tanh(),
+        )
+
+    self.ro = nn.Sequential(
+       nn.Dropout(p=0.5),
+       nn.Linear(self.d_dim, self.d_dim),
+       nn.Tanh(),
+       nn.Dropout(p=0.5),
+       nn.Linear(self.d_dim, 40),
+    )
+    print(self)
+
+  def forward(self, x):
+    phi_output = self.phi(x)
+    sum_output, _ = phi_output.max(1)
+    ro_output = self.ro(sum_output)
+    return ro_output
+
+
+class DTanh_mask(nn.Module):
+
+  def __init__(self, d_dim, x_dim=3, pool = 'mean'):
+    super(DTanh_mask, self).__init__()
+    self.d_dim = d_dim
+    self.x_dim = x_dim
+
+    self.phi = nn.Sequential(
+      PermEqui_att(self.x_dim, self.d_dim),
+      nn.Tanh(),
+      PermEqui_att(self.d_dim, self.d_dim),
+      nn.Tanh(),
+      PermEqui_att(self.d_dim, self.d_dim),
+      nn.Tanh(),
+    )
+
+    self.ro = nn.Sequential(
+       nn.Dropout(p=0.5),
+       nn.Linear(self.d_dim, self.d_dim),
+       nn.Tanh(),
+       nn.Dropout(p=0.5),
+       nn.Linear(self.d_dim, 40),
+    )
+    print(self)
+
+  def forward(self, x, mask):
+    phi_output = self.phi(x, mask)
+    sum_output, _ = phi_output.max(1)
+    ro_output = self.ro(sum_output)
+    return ro_output
+
+
+def clip_grad(model, max_norm):
+    total_norm = 0
+    for p in model.parameters():
+        param_norm = p.grad.data.norm(2)
+        total_norm += param_norm ** 2
+    total_norm = total_norm ** (0.5)
+    clip_coef = max_norm / (total_norm + 1e-6)
+    if clip_coef < 1:
+        for p in model.parameters():
+            p.grad.data.mul_(clip_coef)
+    return total_norm
+
+
+class LocalAttention(nn.Module):
+
+  def __init__(self, d_dim, x_dim=3, pool = 'mean'):
+    super(LocalAttention, self).__init__()
     self.d_dim = d_dim
     self.x_dim = x_dim
 

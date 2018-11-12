@@ -25,7 +25,7 @@ class PointCloudTrainer(object):
         self.model_fetcher = modelnet.ModelFetcher(data_path, batch_size, downsample, do_standardize=True, do_augmentation=True)
 
         #Setup network
-        self.D = classifier.DTanh(network_dim, pool='max1').cuda()
+        self.D = classifier.DTanh_mask(network_dim, pool='max1').cuda()
         self.L = nn.CrossEntropyLoss().cuda()
         self.optimizer = optim.Adam([{'params':self.D.parameters()}], lr=1e-3, weight_decay=1e-7, eps=1e-3)
         self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=list(range(400,num_epochs,400)), gamma=0.1)
@@ -39,12 +39,14 @@ class PointCloudTrainer(object):
             counts = 0
             sum_acc = 0.0
             train_data = self.model_fetcher.train_data(loss_val)
-            for x, _, y in train_data:
+            for x, _, y, mask in train_data:
+                print(x.shape)
                 counts += len(y)
                 X = Variable(torch.cuda.FloatTensor(x))
                 Y = Variable(torch.cuda.LongTensor(y))
+                M = Variable(torch.cuda.ByteTensor(mask))
                 self.optimizer.zero_grad()
-                f_X = self.D(X)
+                f_X = self.D(X, M)
                 loss = self.L(f_X, Y)
                 loss_val = loss.data.cpu().numpy()
                 sum_acc += (f_X.max(dim=1)[1] == Y).float().sum().data.cpu().numpy()
@@ -62,11 +64,12 @@ class PointCloudTrainer(object):
         self.D.eval()
         counts = 0
         sum_acc = 0.0
-        for x, _, y in self.model_fetcher.test_data():
+        for x, _, y, mask in self.model_fetcher.test_data():
             counts += len(y)
             X = Variable(torch.cuda.FloatTensor(x))
             Y = Variable(torch.cuda.LongTensor(y))
-            f_X = self.D(X)
+            M = Variable(torch.cuda.ByteTensor(mask))
+            f_X = self.D(X, M)
             sum_acc += (f_X.max(dim=1)[1] == Y).float().sum().data.cpu().numpy()
             del X,Y,f_X
         test_acc = sum_acc/counts

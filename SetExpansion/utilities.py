@@ -9,8 +9,10 @@ sys.path.append('scripts/');
 from html2 import HTML
 import gensim
 
-# Handles 2D and 3D, reduces one dimension
 def bottle(module, inputData):
+    return module(inputData)
+# Handles 2D and 3D, reduces one dimension
+def realbottle(module, inputData):
     if inputData.dim() == 2:
         output = module(inputData.view(-1));
     elif inputData.dim() == 3:
@@ -84,7 +86,13 @@ def initializeWeights(moduleList, itype):
     assert itype=='xavier', 'Only Xavier initialization supported';
 
     for moduleId, module in enumerate(moduleList):
-        if hasattr(module, '_modules') and len(module._modules) > 0:
+        name = type(module).__name__
+        #print("=============MODULE:========")
+        #print(module)
+        #print("=============MODULE._MODULES:========")
+        #print(module._modules)
+        if hasattr(module, '_modules') and len(module._modules) > 0 and name!='LocalPoolAtt':
+        #if hasattr(module, '_modules') and len(module._modules) > 0 :
             # Iterate again
             initializeWeights(module, itype);
         else:

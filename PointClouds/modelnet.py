@@ -4,11 +4,37 @@ import os
 import numpy as np
 try:
     get_ipython
-    from tqdm import tqdm_notebook as tqdm
+    from tqdm import tqdm_notebook as tqdm, trange
 except:
-    from tqdm import tqdm
+    from tqdm import tqdm, trange
 import h5py
 
+def squared_Euclidean_dist(v1, v2):
+    return np.sum((v1-v2)**2)
+
+
+def get_kth_min(v,k):
+    return np.sort(v)[k-1]
+
+def get_topk_boolean_mask(matrix, k):
+    result = np.zeros([matrix.shape[0], matrix.shape[1]], dtype=bool)
+    for i in range(matrix.shape[0]):
+        near_flags = matrix[i] <  get_kth_min(matrix[i], k)
+        result[i][near_flags] = True
+    return result
+
+def get_knn(xs, perm, n=50):
+    """This function returns the knn for each nodes."""
+    knn_masks = np.zeros([xs.shape[0], len(perm), len(perm)], dtype=bool)
+    for i in trange(xs.shape[0]):
+        knn_matrix = np.zeros([len(perm), len(perm)])
+        x = xs[i, perm]
+        for j in range(x.shape[0]):
+            for k in range(x.shape[0]):
+                #knn_matrix[j][k] = squared_Euclidean_dist(x[j],x[k])
+                knn_matrix[j] = squared_Euclidean_dist(x[j],x)
+        knn_masks[i] = get_topk_boolean_mask(knn_matrix, n)
+    return knn_masks
 
 def rotate_z(theta, x):
     theta = np.expand_dims(theta, 1)
@@ -65,6 +91,9 @@ class ModelFetcher(object):
         # select the subset of points to use throughout beforehand
         self.perm = np.random.permutation(self._train_data.shape[1])[::self.down_sample]
 
+        self._train_dist_mask = get_knn(self._train_data, self.perm)
+        self._test_dist_mask = get_knn(self._test_data, self.perm)
+
     def train_data(self, loss=0.0):
         rng_state = np.random.get_state()
         np.random.shuffle(self._train_data)
@@ -81,7 +110,7 @@ class ModelFetcher(object):
         perm = self.perm
         batch_card = len(perm) * np.ones(self.batch_size, dtype=np.int32)
         while end < N:
-            yield self.prep2(self._train_data[start:end, perm]), batch_card, self._train_label[start:end]
+            yield self.prep2(self._train_data[start:end, perm]), batch_card, self._train_label[start:end], self._train_dist_mask[start:end]
             start = end
             end += self.batch_size
 
@@ -95,6 +124,7 @@ class ModelFetcher(object):
         N = len(self._test_data)
         batch_card = (self._train_data.shape[1]//self.down_sample) * np.ones(self.batch_size, dtype=np.int32)
         while end < N:
-            yield self.prep1(self._test_data[start:end, 1::self.down_sample]), batch_card, self._test_label[start:end]
+            yield self.prep1(self._test_data[start:end, 1::self.down_sample]), batch_card, self._test_label[start:end], self._test_dist_mask[start:end]
             start = end
             end += self.batch_size
+
