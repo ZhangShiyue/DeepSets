@@ -36,6 +36,18 @@ class PermEqui_attn1(nn.Module):
         return x
 
 
+class PermEqui1_norm(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super(PermEqui1_norm, self).__init__()
+        self.layer_norm = nn.LayerNorm(out_dim)
+        self.Gamma = nn.Linear(in_dim, out_dim)
+
+    def forward(self, x):
+        x = self.Gamma(x)
+        x = self.layer_norm(x)
+        return x
+
+
 class PermEqui1_max(nn.Module):
     def __init__(self, in_dim, out_dim):
         super(PermEqui1_max, self).__init__()
@@ -168,8 +180,6 @@ class DTanh(nn.Module):
                 nn.Tanh(),
                 PermEqui1_max(self.d_dim, self.d_dim),
                 nn.Tanh(),
-                PermEqui1_max(self.d_dim, self.d_dim),
-                nn.Tanh(),
             )
         elif pool == 'mean':
             self.phi = nn.Sequential(
@@ -197,8 +207,6 @@ class DTanh(nn.Module):
                 nn.Tanh(),
                 PermEqui_attn(self.d_dim, self.d_dim),
                 nn.Tanh(),
-                PermEqui_attn(self.d_dim, self.d_dim),
-                nn.Tanh(),
             )
         elif pool == 'attn1':
             self.phi = nn.Sequential(
@@ -207,6 +215,15 @@ class DTanh(nn.Module):
                 PermEqui_attn1(self.d_dim, self.d_dim),
                 nn.Tanh(),
                 PermEqui_attn1(self.d_dim, self.d_dim),
+                nn.Tanh(),
+            )
+        elif pool == 'norm':
+            self.phi = nn.Sequential(
+                PermEqui1_norm(self.x_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui1_norm(self.d_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui1_norm(self.d_dim, self.d_dim),
                 nn.Tanh(),
             )
 
