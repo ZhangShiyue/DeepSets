@@ -180,6 +180,8 @@ class DTanh(nn.Module):
                 nn.Tanh(),
                 PermEqui1_max(self.d_dim, self.d_dim),
                 nn.Tanh(),
+                PermEqui1_max(self.d_dim, self.d_dim),
+                nn.Tanh(),
             )
         elif pool == 'mean':
             self.phi = nn.Sequential(
