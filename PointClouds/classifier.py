@@ -230,6 +230,17 @@ class DTanh(nn.Module):
                 PermEqui1_norm(self.d_dim, self.d_dim),
                 nn.Tanh(),
             )
+        elif pool == 'hybrid':
+            self.phi = nn.Sequential(
+                PermEqui1_max(self.x_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui_attn(self.d_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui1_max(self.d_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui_attn(self.d_dim, self.d_dim),
+                nn.Tanh(),
+            )
 
         self.ro = nn.Sequential(
             nn.Dropout(p=0.5),
