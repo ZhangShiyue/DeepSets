@@ -62,6 +62,7 @@ class MultiHeadAttention(nn.Module):
 
         return output, attn
 
+
 class PositionwiseFeedForward(nn.Module):
     ''' A two-feed-forward-layer module '''
 

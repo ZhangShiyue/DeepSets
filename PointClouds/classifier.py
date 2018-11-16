@@ -23,6 +23,21 @@ class PermEqui_attn(nn.Module):
         return x
 
 
+class Pool_attn(nn.Module):
+    def __init__(self, batch_size, out_dim):
+        super(Pool_attn, self).__init__()
+        self.batch_size = batch_size
+        self.out_dim = out_dim
+        self.k = torch.nn.Parameter(torch.Tensor(1, 1, out_dim)).cuda()
+        self.kk = self.k.repeat([batch_size, 1, 1]).cuda()
+        self.attn = MultiHeadAttention(1, out_dim, out_dim, out_dim)
+
+    def forward(self, x):
+        ax, _ = self.attn(self.kk, x, x)
+        ax = ax.view(self.batch_size, self.out_dim).cuda()
+        return ax
+
+
 class PermEqui_attn1(nn.Module):
     def __init__(self, in_dim, out_dim):
         super(PermEqui_attn1, self).__init__()
@@ -158,10 +173,11 @@ class D(nn.Module):
 
 
 class DTanh(nn.Module):
-    def __init__(self, d_dim, x_dim=3, pool='mean'):
+    def __init__(self, batch_size, d_dim, x_dim=3, pool='mean'):
         super(DTanh, self).__init__()
         self.d_dim = d_dim
         self.x_dim = x_dim
+        self.batch_size = batch_size
 
         if pool == 'max':
             self.phi = nn.Sequential(
@@ -180,8 +196,8 @@ class DTanh(nn.Module):
                 nn.Tanh(),
                 PermEqui1_max(self.d_dim, self.d_dim),
                 nn.Tanh(),
-                PermEqui1_max(self.d_dim, self.d_dim),
-                nn.Tanh(),
+                # PermEqui1_max(self.d_dim, self.d_dim),
+                # nn.Tanh(),
             )
         elif pool == 'mean':
             self.phi = nn.Sequential(
@@ -242,6 +258,10 @@ class DTanh(nn.Module):
                 nn.Tanh(),
             )
 
+        self.pma = nn.Sequential(
+            Pool_attn(self.batch_size, self.d_dim),
+        )
+
         self.ro = nn.Sequential(
             nn.Dropout(p=0.5),
             nn.Linear(self.d_dim, self.d_dim),
@@ -252,7 +272,8 @@ class DTanh(nn.Module):
 
     def forward(self, x):
         phi_output = self.phi(x)
-        sum_output, _ = phi_output.max(1)
+        sum_output = self.pma(phi_output)
+        # sum_output, _ = phi_output.max(1)
         ro_output = self.ro(sum_output)
         return ro_output
 
