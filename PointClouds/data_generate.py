@@ -55,7 +55,7 @@ print('testing data: %d' % len(test_pc))
 print('testing pc points: %d' % len(test_pc[0]))
 print('testing label: %d' % len(test_label))
 
-hf = h5py.File('sources/data_4.h5', 'w')
+hf = h5py.File('sources/data.h5', 'w')
 hf.create_dataset('tr_cloud', data=train_pc)
 hf.create_dataset('tr_label', data=train_label)
 hf.create_dataset('test_cloud', data=test_pc)
