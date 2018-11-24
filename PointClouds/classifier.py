@@ -8,6 +8,21 @@ import h5py
 import pdb
 from tqdm import tqdm, trange
 
+from sublayer import MultiHeadAttention, PositionwiseFeedForward
+
+class SAB(nn.Module):
+  def __init__(self, n_head, in_dim, out_dim):
+    super(SAB, self).__init__()
+    self.Gamma = nn.Linear(in_dim, out_dim)
+    self.Attn = MultiHeadAttention(n_head, out_dim, out_dim, out_dim)
+    self.rFF = PositionwiseFeedForward(out_dim, out_dim)
+    
+  def forward(self, x, relu_2=False):
+    output = self.Gamma(x)
+    output, _ = self.Attn(output, output, output)
+    output = self.rFF(output, relu_2)
+    return output
+
 class PermEqui1_max(nn.Module):
   def __init__(self, in_dim, out_dim):
     super(PermEqui1_max, self).__init__()
@@ -54,6 +69,27 @@ class PermEqui2_mean(nn.Module):
     x = x - xm
     return x
 
+
+class SAB_Pooling(nn.Module):
+  def __init__(self, n_head, d_dim, x_dim=3):
+    super(SAB_Pooling, self).__init__()
+    self.SAB_1 = SAB(n_head, x_dim, d_dim)
+    self.SAB_2 = SAB(n_head, d_dim, d_dim)
+    self.ro = nn.Sequential(
+       nn.Dropout(p=0.5),
+       nn.Linear(d_dim, d_dim),
+       nn.ReLU(inplace=True),
+       nn.Dropout(p=0.5),
+       nn.Linear(d_dim, 40),
+    )
+    print(self)
+    
+  def forward(self, x):
+    encode = self.SAB_1(x, relu_2=True)
+    encode = self.SAB_2(encode, relu_2=False)
+    max_encode, _ = encode.max(1)
+    ro_output = self.ro(max_encode)
+    return ro_output
 
 class D(nn.Module):
 

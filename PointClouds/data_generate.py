@@ -55,9 +55,17 @@ print('testing data: %d' % len(test_pc))
 print('testing pc points: %d' % len(test_pc[0]))
 print('testing label: %d' % len(test_label))
 
-hf = h5py.File('sources/data.h5', 'w')
+hf = h5py.File('sources/data_4.h5', 'w')
 hf.create_dataset('tr_cloud', data=train_pc)
 hf.create_dataset('tr_label', data=train_label)
 hf.create_dataset('test_cloud', data=test_pc)
 hf.create_dataset('test_label', data=test_label)
 hf.close()
+'''
+training data: 9843
+training pc points: 10000
+training label: 9843
+testing data: 2468
+testing pc points: 10000
+testing label: 2468
+'''

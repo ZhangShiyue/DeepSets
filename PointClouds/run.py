@@ -10,9 +10,10 @@ import modelnet
 
 
 #################### Settings ##############################
+n_head = 4
 num_epochs = 1000
 batch_size = 64
-downsample = 10    #For 5000 points use 2, for 1000 use 10, for 100 use 100
+downsample = 100    #For 5000 points use 2, for 1000 use 10, for 100 use 100
 network_dim = 256  #For 5000 points use 512, for 1000 use 256, for 100 use 256
 num_repeats = 5    #Number of times to repeat the experiment
 data_path = 'sources/data.h5'
@@ -25,7 +26,8 @@ class PointCloudTrainer(object):
         self.model_fetcher = modelnet.ModelFetcher(data_path, batch_size, downsample, do_standardize=True, do_augmentation=True)
 
         #Setup network
-        self.D = classifier.DTanh(network_dim, pool='max1').cuda()
+        # self.D = classifier.DTanh(network_dim, pool='max1').cuda()
+        self.D = classifier.SAB_Pooling(n_head, network_dim).cuda()
         self.L = nn.CrossEntropyLoss().cuda()
         self.optimizer = optim.Adam([{'params':self.D.parameters()}], lr=1e-3, weight_decay=1e-7, eps=1e-3)
         self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=list(range(400,num_epochs,400)), gamma=0.1)
@@ -87,4 +89,4 @@ if __name__ == "__main__":
         try:
             print('Test accuracy: {0:0.2f} '.format(np.mean(test_accs)) + unichr(177).encode('utf-8') + ' {0:0.3f} '.format(np.std(test_accs)))
         except:
-            print('Test accuracy: {0:0.2f} +/-  {0:0.3f} '.format(np.mean(test_accs), np.std(test_accs)))
+            print('Test accuracy: {0:0.2f} +/-  {1:0.3f} '.format(np.mean(test_accs), np.std(test_accs)))
