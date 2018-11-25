@@ -227,8 +227,6 @@ class DTanh(nn.Module):
                 nn.Tanh(),
                 PermEqui_attn(self.d_dim, self.d_dim),
                 nn.Tanh(),
-                PermEqui_attn(self.d_dim, self.d_dim),
-                nn.Tanh(),
             )
         elif pool == 'attn1':
             self.phi = nn.Sequential(

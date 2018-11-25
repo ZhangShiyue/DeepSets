@@ -23,6 +23,9 @@ class ScaledDotProductAttention(nn.Module):
 
         attn = self.softmax(attn)
         attn = self.dropout(attn)
+        attn1 = attn[:, :, :, None]
+        v1 = v[:, None, :, :]
         output = torch.bmm(attn, v)
+        output1, _ = (attn1 * v1).max(2)
 
-        return output, attn
+        return output1, attn
