@@ -54,12 +54,14 @@ class PermEqui_attn1(nn.Module):
 class PermEqui1_norm(nn.Module):
     def __init__(self, in_dim, out_dim):
         super(PermEqui1_norm, self).__init__()
-        self.layer_norm = nn.LayerNorm(out_dim)
+        # self.layer_norm = nn.LayerNorm(out_dim)
+        self.batch_norm = nn.BatchNorm1d(100)
         self.Gamma = nn.Linear(in_dim, out_dim)
 
     def forward(self, x):
         x = self.Gamma(x)
-        x = self.layer_norm(x)
+        # x = self.layer_norm(x)
+        x = self.batch_norm(x)
         return x
 
 
@@ -258,9 +260,9 @@ class DTanh(nn.Module):
                 nn.Tanh(),
             )
 
-        self.pma = nn.Sequential(
-            Pool_attn(self.batch_size, self.d_dim),
-        )
+        # self.pma = nn.Sequential(
+        #     Pool_attn(self.batch_size, self.d_dim),
+        # )
 
         self.ro = nn.Sequential(
             nn.Dropout(p=0.5),
@@ -272,8 +274,8 @@ class DTanh(nn.Module):
 
     def forward(self, x):
         phi_output = self.phi(x)
-        sum_output = self.pma(phi_output)
-        # sum_output, _ = phi_output.max(1)
+        # sum_output = self.pma(phi_output)
+        sum_output, _ = phi_output.max(1)
         ro_output = self.ro(sum_output)
         return ro_output
 
