@@ -27,8 +27,7 @@ class ScaledDotProductAttention(nn.Module):
         output = torch.bmm(attn, v)
 
         return output, attn
-        
-        
+
 class MultiHeadAttention(nn.Module):
     ''' Multi-Head Attention module '''
 
@@ -46,7 +45,7 @@ class MultiHeadAttention(nn.Module):
         nn.init.normal_(self.w_ks.weight, mean=0, std=np.sqrt(2.0 / (d_model + d_k)))
         nn.init.normal_(self.w_vs.weight, mean=0, std=np.sqrt(2.0 / (d_model + d_v)))
 
-        self.attention = ScaledDotProductAttention(temperature=np.power(d_k, 0.5), attn_dropout=dropout)
+        self.attention = ScaledDotProductAttention(temperature=np.power(d_k, 0.5))
         self.layer_norm = nn.LayerNorm(d_model)
 
         self.fc = nn.Linear(n_head * d_v, d_model)
@@ -72,7 +71,7 @@ class MultiHeadAttention(nn.Module):
         q = q.permute(2, 0, 1, 3).contiguous().view(-1, len_q, d_k) # (n*b) x lq x dk
         k = k.permute(2, 0, 1, 3).contiguous().view(-1, len_k, d_k) # (n*b) x lk x dk
         v = v.permute(2, 0, 1, 3).contiguous().view(-1, len_v, d_v) # (n*b) x lv x dv
-        
+
         if mask is not None:
             mask = mask.repeat(n_head, 1, 1) # (n*b) x .. x ..
         output, attn = self.attention(q, k, v, mask=mask)
@@ -84,7 +83,6 @@ class MultiHeadAttention(nn.Module):
         output = self.layer_norm(output + residual)
 
         return output, attn
-
 
 class PositionwiseFeedForward(nn.Module):
     ''' A two-feed-forward-layer module '''
