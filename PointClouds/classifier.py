@@ -36,15 +36,11 @@ class ISAB(nn.Module):
     self.rFF_2 = PositionwiseFeedForward(out_dim, out_dim)
     
   def forward(self, x, relu_2=False):
-    print(self.I)
     x_output = self.Gamma(x)
     output_1, _ = self.Attn_1(self.I, x_output, x_output)
     output_1 = self.rFF_1(output_1, True)
-    print(output_1.size())
     output_2, _ = self.Attn_2(x_output, output_1, output_1)
     output_2 = self.rFF_2(output_2, relu_2)
-    print(output_2.size())
-    input()
     return output_2
 
 class PermEqui1_max(nn.Module):
