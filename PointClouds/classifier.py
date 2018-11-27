@@ -10,6 +10,8 @@ from tqdm import tqdm, trange
 
 from sublayer import MultiHeadAttention, PositionwiseFeedForward
 
+batch_size = 64
+
 class SAB(nn.Module):
   def __init__(self, n_head, in_dim, out_dim):
     super(SAB, self).__init__()
@@ -22,6 +24,28 @@ class SAB(nn.Module):
     output, _ = self.Attn(output, output, output)
     output = self.rFF(output, relu_2)
     return output
+    
+class ISAB(nn.Module):
+  def __init__(self, n_head, in_dim, I_dim, out_dim):
+    super(ISAB, self).__init__()
+    self.I = nn.Parameter(torch.zeros(batch_size, I_dim, out_dim), requires_grad=True)
+    self.Gamma = nn.Linear(in_dim, out_dim)
+    self.Attn_1 = MultiHeadAttention(n_head, out_dim, out_dim, out_dim)
+    self.rFF_1 = PositionwiseFeedForward(out_dim, out_dim)
+    self.Attn_2 = MultiHeadAttention(n_head, out_dim, out_dim, out_dim)
+    self.rFF_2 = PositionwiseFeedForward(out_dim, out_dim)
+    
+  def forward(self, x, relu_2=False):
+    print(self.I)
+    x_output = self.Gamma(x)
+    output_1, _ = self.Attn_1(self.I, x_output, x_output)
+    output_1 = self.rFF_1(output_1, True)
+    print(output_1.size())
+    output_2, _ = self.Attn_2(x_output, output_1, output_1)
+    output_2 = self.rFF_2(output_2, relu_2)
+    print(output_2.size())
+    input()
+    return output_2
 
 class PermEqui1_max(nn.Module):
   def __init__(self, in_dim, out_dim):
@@ -87,6 +111,27 @@ class SAB_Pooling(nn.Module):
   def forward(self, x):
     encode = self.SAB_1(x, relu_2=True)
     encode = self.SAB_2(encode, relu_2=False)
+    max_encode, _ = encode.max(1)
+    ro_output = self.ro(max_encode)
+    return ro_output
+    
+class ISAB_Pooling(nn.Module):
+  def __init__(self, n_head, d_dim, x_dim=3, I_dim=16):
+    super(ISAB_Pooling, self).__init__()
+    self.ISAB_1 = ISAB(n_head, x_dim, I_dim, d_dim)
+    self.ISAB_2 = ISAB(n_head, d_dim, I_dim, d_dim)
+    self.ro = nn.Sequential(
+       nn.Dropout(p=0.5),
+       nn.Linear(d_dim, d_dim),
+       nn.ReLU(inplace=True),
+       nn.Dropout(p=0.5),
+       nn.Linear(d_dim, 40),
+    )
+    print(self)
+    
+  def forward(self, x):
+    encode = self.ISAB_1(x, relu_2=True)
+    encode = self.ISAB_2(encode, relu_2=False)
     max_encode, _ = encode.max(1)
     ro_output = self.ro(max_encode)
     return ro_output

@@ -45,7 +45,7 @@ class MultiHeadAttention(nn.Module):
         nn.init.normal_(self.w_ks.weight, mean=0, std=np.sqrt(2.0 / (d_model + d_k)))
         nn.init.normal_(self.w_vs.weight, mean=0, std=np.sqrt(2.0 / (d_model + d_v)))
 
-        self.attention = ScaledDotProductAttention(temperature=np.power(d_k, 0.5))
+        self.attention = ScaledDotProductAttention(temperature=np.power(d_k, 0.5), attn_dropout=dropout)
         self.layer_norm = nn.LayerNorm(d_model)
 
         self.fc = nn.Linear(n_head * d_v, d_model)
@@ -97,7 +97,10 @@ class PositionwiseFeedForward(nn.Module):
     def forward(self, x, relu_2=False):
         residual = x
         output = x.transpose(1, 2)
-        output = self.w_2(F.relu(self.w_1(output)))
+        output = self.w_1(output)
+        if relu_2:
+            output = F.relu(output)
+        output = self.w_2(output)
         if relu_2:
             output = F.relu(output)
         output = output.transpose(1, 2)
