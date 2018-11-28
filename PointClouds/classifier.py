@@ -29,6 +29,7 @@ class Pool_attn(nn.Module):
         self.batch_size = batch_size
         self.out_dim = out_dim
         self.k = torch.nn.Parameter(torch.Tensor(1, 1, out_dim)).cuda()
+        nn.init.zeros_(self.k)
         self.kk = self.k.repeat([batch_size, 1, 1]).cuda()
         self.attn = MultiHeadAttention(1, out_dim, out_dim, out_dim)
 
@@ -283,9 +284,9 @@ class DTanh(nn.Module):
                     PermEqui_attn_norm(self.batch_size, self.d_dim, self.d_dim),
                     nn.Tanh(),
             )
-        # self.pma = nn.Sequential(
-        #     Pool_attn(self.batch_size, self.d_dim),
-        # )
+        self.pma = nn.Sequential(
+            Pool_attn(self.batch_size, self.d_dim),
+        )
 
         self.ro = nn.Sequential(
                 nn.Dropout(p=0.5),
@@ -297,8 +298,8 @@ class DTanh(nn.Module):
 
     def forward(self, x):
         phi_output = self.phi(x)
-        # sum_output = self.pma(phi_output)
-        sum_output, _ = phi_output.max(1)
+        sum_output = self.pma(phi_output)
+        # sum_output, _ = phi_output.max(1)
         ro_output = self.ro(sum_output)
         return ro_output
 
