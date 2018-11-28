@@ -38,6 +38,25 @@ class Pool_attn(nn.Module):
         return ax
 
 
+class PermEqui_attn_norm(nn.Module):
+    def __init__(self, batch_size, in_dim, out_dim):
+        super(PermEqui_attn_norm, self).__init__()
+        self.batch_size = batch_size
+        self.in_dim = in_dim
+        self.out_dim = out_dim
+        self.k = torch.nn.Parameter(torch.Tensor(1, 1, in_dim)).cuda()
+        nn.init.zeros_(self.k)
+        self.kk = self.k.repeat([batch_size, 1, 1]).cuda()
+        self.attn = MultiHeadAttention(1, in_dim, out_dim, in_dim)
+        self.Gamma = nn.Linear(in_dim, out_dim)
+
+    def forward(self, x):
+        ax, _ = self.attn(self.kk, x, x)
+        ax = ax.view(self.batch_size, 1, self.in_dim).cuda()
+        x = self.Gamma(x - ax)
+        return x
+
+
 class PermEqui_attn1(nn.Module):
     def __init__(self, in_dim, out_dim):
         super(PermEqui_attn1, self).__init__()
@@ -54,14 +73,12 @@ class PermEqui_attn1(nn.Module):
 class PermEqui1_norm(nn.Module):
     def __init__(self, in_dim, out_dim):
         super(PermEqui1_norm, self).__init__()
-        # self.layer_norm = nn.LayerNorm(out_dim)
-        self.batch_norm = nn.BatchNorm1d(100)
+        self.layer_norm = nn.LayerNorm(out_dim)
         self.Gamma = nn.Linear(in_dim, out_dim)
 
     def forward(self, x):
         x = self.Gamma(x)
-        # x = self.layer_norm(x)
-        x = self.batch_norm(x)
+        x = self.layer_norm(x)
         return x
 
 
@@ -183,91 +200,99 @@ class DTanh(nn.Module):
 
         if pool == 'max':
             self.phi = nn.Sequential(
-                PermEqui2_max(self.x_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui2_max(self.d_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui2_max(self.d_dim, self.d_dim),
-                nn.Tanh(),
+                    PermEqui2_max(self.x_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui2_max(self.d_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui2_max(self.d_dim, self.d_dim),
+                    nn.Tanh(),
             )
         elif pool == 'max1':
             self.phi = nn.Sequential(
-                PermEqui1_max(self.x_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui1_max(self.d_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui1_max(self.d_dim, self.d_dim),
-                nn.Tanh(),
-                # PermEqui1_max(self.d_dim, self.d_dim),
-                # nn.Tanh(),
+                    PermEqui1_max(self.x_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui1_max(self.d_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui1_max(self.d_dim, self.d_dim),
+                    nn.Tanh(),
+                    # PermEqui1_max(self.d_dim, self.d_dim),
+                    # nn.Tanh(),
             )
         elif pool == 'mean':
             self.phi = nn.Sequential(
-                PermEqui2_mean(self.x_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui2_mean(self.d_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui2_mean(self.d_dim, self.d_dim),
-                nn.Tanh(),
+                    PermEqui2_mean(self.x_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui2_mean(self.d_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui2_mean(self.d_dim, self.d_dim),
+                    nn.Tanh(),
             )
         elif pool == 'mean1':
             self.phi = nn.Sequential(
-                PermEqui1_mean(self.x_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui1_mean(self.d_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui1_mean(self.d_dim, self.d_dim),
-                nn.Tanh(),
+                    PermEqui1_mean(self.x_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui1_mean(self.d_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui1_mean(self.d_dim, self.d_dim),
+                    nn.Tanh(),
             )
         elif pool == 'attn':
             self.phi = nn.Sequential(
-                PermEqui1_max(self.x_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui_attn(self.d_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui_attn(self.d_dim, self.d_dim),
-                nn.Tanh(),
+                    PermEqui1_max(self.x_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui_attn(self.d_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui_attn(self.d_dim, self.d_dim),
+                    nn.Tanh(),
             )
         elif pool == 'attn1':
             self.phi = nn.Sequential(
-                PermEqui_attn1(self.x_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui_attn1(self.d_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui_attn1(self.d_dim, self.d_dim),
-                nn.Tanh(),
+                    PermEqui_attn1(self.x_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui_attn1(self.d_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui_attn1(self.d_dim, self.d_dim),
+                    nn.Tanh(),
             )
         elif pool == 'norm':
             self.phi = nn.Sequential(
-                PermEqui1_norm(self.x_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui1_norm(self.d_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui1_norm(self.d_dim, self.d_dim),
-                nn.Tanh(),
+                    PermEqui1_norm(self.x_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui1_norm(self.d_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui1_norm(self.d_dim, self.d_dim),
+                    nn.Tanh(),
             )
         elif pool == 'hybrid':
             self.phi = nn.Sequential(
-                PermEqui1_max(self.x_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui_attn(self.d_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui1_max(self.d_dim, self.d_dim),
-                nn.Tanh(),
-                PermEqui_attn(self.d_dim, self.d_dim),
-                nn.Tanh(),
+                    PermEqui1_max(self.x_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui_attn(self.d_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui1_max(self.d_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui_attn(self.d_dim, self.d_dim),
+                    nn.Tanh(),
             )
-
+        elif pool == 'attn_norm':
+            self.phi = nn.Sequential(
+                    PermEqui_attn_norm(self.batch_size, self.x_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui_attn_norm(self.batch_size, self.d_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui_attn_norm(self.batch_size, self.d_dim, self.d_dim),
+                    nn.Tanh(),
+            )
         # self.pma = nn.Sequential(
         #     Pool_attn(self.batch_size, self.d_dim),
         # )
 
         self.ro = nn.Sequential(
-            nn.Dropout(p=0.5),
-            nn.Linear(self.d_dim, self.d_dim),
-            nn.Tanh(),
-            nn.Dropout(p=0.5),
-            nn.Linear(self.d_dim, 40),
+                nn.Dropout(p=0.5),
+                nn.Linear(self.d_dim, self.d_dim),
+                nn.Tanh(),
+                nn.Dropout(p=0.5),
+                nn.Linear(self.d_dim, 40),
         )
 
     def forward(self, x):
