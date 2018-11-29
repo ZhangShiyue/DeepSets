@@ -15,7 +15,7 @@ batch_size = 64
 class SAB(nn.Module):
   def __init__(self, n_head, in_dim, out_dim):
     super(SAB, self).__init__()
-    self.Gamma = nn.Linear(in_dim, out_dim)
+    self.Gamma = PermEqui1_max(in_dim, out_dim)
     self.Attn = MultiHeadAttention(n_head, out_dim, out_dim, out_dim)
     self.rFF = PositionwiseFeedForward(out_dim, out_dim)
     
@@ -28,7 +28,7 @@ class SAB(nn.Module):
 class ISAB(nn.Module):
   def __init__(self, n_head, in_dim, I_dim, out_dim):
     super(ISAB, self).__init__()
-    self.I = nn.Parameter(torch.zeros(batch_size, I_dim, out_dim), requires_grad=True)
+    self.I = nn.Parameter(torch.zeros(batch_size, I_dim, out_dim), requires_grad=True).cuda()
     # self.Gamma = nn.Linear(in_dim, out_dim)
     self.Gamma = PermEqui1_max(in_dim, out_dim)
     self.Attn_1 = MultiHeadAttention(n_head, out_dim, out_dim, out_dim)
