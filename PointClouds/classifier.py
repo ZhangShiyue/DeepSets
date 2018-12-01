@@ -22,6 +22,18 @@ class PermEqui_attn(nn.Module):
         return x
 
 
+class PermEqui_attn_concat(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super(PermEqui_attn_concat, self).__init__()
+        self.Gamma = nn.Linear(in_dim * 2, out_dim)
+        self.attn = MultiHeadAttention(1, in_dim, out_dim, in_dim)
+
+    def forward(self, x):
+        xa, _ = self.attn(x, x, x)
+        x = self.Gamma(torch.cat((x, xa), -1))
+        return x
+
+
 class Pool_attn(nn.Module):
     def __init__(self, batch_size, out_dim):
         super(Pool_attn, self).__init__()
@@ -54,19 +66,6 @@ class PermEqui_attn_norm(nn.Module):
         ax, _ = self.attn(self.kk, x, x)
         ax = ax.view(self.batch_size, 1, self.in_dim).cuda()
         x = self.Gamma(x - ax)
-        return x
-
-
-class PermEqui_attn1(nn.Module):
-    def __init__(self, in_dim, out_dim):
-        super(PermEqui_attn1, self).__init__()
-        self.Gamma = nn.Linear(in_dim, out_dim)
-        self.attn = MultiHeadAttention(1, in_dim, out_dim, out_dim)
-        self.layer_norm = nn.LayerNorm(out_dim)
-
-    def forward(self, x):
-        x, _ = self.attn(x, x, x)
-        x = self.layer_norm(self.Gamma(x))
         return x
 
 
@@ -215,8 +214,6 @@ class DTanh(nn.Module):
                     nn.Tanh(),
                     PermEqui1_max(self.d_dim, self.d_dim),
                     nn.Tanh(),
-                    # PermEqui1_max(self.d_dim, self.d_dim),
-                    # nn.Tanh(),
             )
         elif pool == 'mean':
             self.phi = nn.Sequential(
@@ -245,13 +242,13 @@ class DTanh(nn.Module):
                     PermEqui_attn(self.d_dim, self.d_dim),
                     nn.Tanh(),
             )
-        elif pool == 'attn1':
+        elif pool == 'attn_concat':
             self.phi = nn.Sequential(
-                    PermEqui_attn1(self.x_dim, self.d_dim),
+                    PermEqui_attn_concat(self.x_dim, self.d_dim),
                     nn.Tanh(),
-                    PermEqui_attn1(self.d_dim, self.d_dim),
+                    PermEqui_attn_concat(self.d_dim, self.d_dim),
                     nn.Tanh(),
-                    PermEqui_attn1(self.d_dim, self.d_dim),
+                    PermEqui_attn_concat(self.d_dim, self.d_dim),
                     nn.Tanh(),
             )
         elif pool == 'norm':
