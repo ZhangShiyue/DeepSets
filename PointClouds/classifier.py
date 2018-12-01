@@ -14,12 +14,11 @@ class PermEqui_attn(nn.Module):
     def __init__(self, in_dim, out_dim):
         super(PermEqui_attn, self).__init__()
         self.Gamma = nn.Linear(in_dim, out_dim)
-        self.attn = MultiHeadAttention(1, in_dim, out_dim, out_dim)
-        self.layer_norm = nn.LayerNorm(in_dim)
+        self.attn = MultiHeadAttention(1, in_dim, out_dim, in_dim)
 
     def forward(self, x):
-        x, _ = self.attn(x, x, x)
-        x = self.layer_norm(self.Gamma(x) + x)
+        xa, _ = self.attn(x, x, x)
+        x = self.Gamma(x - xa)
         return x
 
 
@@ -239,7 +238,7 @@ class DTanh(nn.Module):
             )
         elif pool == 'attn':
             self.phi = nn.Sequential(
-                    PermEqui1_max(self.x_dim, self.d_dim),
+                    PermEqui_attn(self.x_dim, self.d_dim),
                     nn.Tanh(),
                     PermEqui_attn(self.d_dim, self.d_dim),
                     nn.Tanh(),
@@ -284,9 +283,9 @@ class DTanh(nn.Module):
                     PermEqui_attn_norm(self.batch_size, self.d_dim, self.d_dim),
                     nn.Tanh(),
             )
-        self.pma = nn.Sequential(
-            Pool_attn(self.batch_size, self.d_dim),
-        )
+        # self.pma = nn.Sequential(
+        #     Pool_attn(self.batch_size, self.d_dim),
+        # )
 
         self.ro = nn.Sequential(
                 nn.Dropout(p=0.5),
@@ -298,8 +297,8 @@ class DTanh(nn.Module):
 
     def forward(self, x):
         phi_output = self.phi(x)
-        sum_output = self.pma(phi_output)
-        # sum_output, _ = phi_output.max(1)
+        # sum_output = self.pma(phi_output)
+        sum_output, _ = phi_output.max(1)
         ro_output = self.ro(sum_output)
         return ro_output
 
