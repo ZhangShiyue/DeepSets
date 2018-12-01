@@ -12,7 +12,7 @@ import modelnet
 #################### Settings ##############################
 num_epochs = 1000
 batch_size = 64
-downsample = 100    #For 5000 points use 2, for 1000 use 10, for 100 use 100
+downsample = 10    #For 5000 points use 2, for 1000 use 10, for 100 use 100
 network_dim = 256  #For 5000 points use 512, for 1000 use 256, for 100 use 256
 num_repeats = 5    #Number of times to repeat the experiment
 data_path = 'sources/data.h5'
@@ -25,7 +25,7 @@ class PointCloudTrainer(object):
         self.model_fetcher = modelnet.ModelFetcher(data_path, batch_size, downsample, do_standardize=True, do_augmentation=True)
 
         #Setup network
-        self.D = classifier.DTanh(batch_size, network_dim, pool='dot_attn').cuda()
+        self.D = classifier.DTanh(batch_size, network_dim, pool='bilinear_attn').cuda()
         self.L = nn.CrossEntropyLoss().cuda()
         self.optimizer = optim.Adam([{'params':self.D.parameters()}], lr=1e-3, weight_decay=1e-7, eps=1e-3)
         self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=list(range(400,num_epochs,400)), gamma=0.1)

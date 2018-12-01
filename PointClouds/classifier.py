@@ -7,7 +7,7 @@ import torch.autograd as autograd
 import h5py
 import pdb
 from tqdm import tqdm, trange
-from SubLayers import MultiHeadAttention, DotAttention
+from SubLayers import MultiHeadAttention, DotAttention, BilinearAttention
 
 
 class PermEqui_attn(nn.Module):
@@ -27,6 +27,18 @@ class PermEqui_dot_attn(nn.Module):
         super(PermEqui_dot_attn, self).__init__()
         self.Gamma = nn.Linear(in_dim, out_dim)
         self.attn = DotAttention(1, in_dim, in_dim, in_dim)
+
+    def forward(self, x):
+        xa, _ = self.attn(x, x, x)
+        x = self.Gamma(x - xa)
+        return x
+
+
+class PermEqui_bilinear_attn(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super(PermEqui_bilinear_attn, self).__init__()
+        self.Gamma = nn.Linear(in_dim, out_dim)
+        self.attn = BilinearAttention(1, in_dim, in_dim, in_dim)
 
     def forward(self, x):
         xa, _ = self.attn(x, x, x)
@@ -291,6 +303,15 @@ class DTanh(nn.Module):
                     PermEqui_dot_attn(self.d_dim, self.d_dim),
                     nn.Tanh(),
                     PermEqui_dot_attn(self.d_dim, self.d_dim),
+                    nn.Tanh(),
+            )
+        elif pool == 'bilinear_attn':
+            self.phi = nn.Sequential(
+                    PermEqui_bilinear_attn(self.x_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui_bilinear_attn(self.d_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui_bilinear_attn(self.d_dim, self.d_dim),
                     nn.Tanh(),
             )
         elif pool == 'norm':
