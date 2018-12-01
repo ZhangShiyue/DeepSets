@@ -34,6 +34,18 @@ class PermEqui_attn_concat(nn.Module):
         return x
 
 
+class PermEqui_attn_dot(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super(PermEqui_attn_dot, self).__init__()
+        self.Gamma = nn.Linear(in_dim, out_dim)
+        self.attn = MultiHeadAttention(1, in_dim, out_dim, in_dim)
+
+    def forward(self, x):
+        xa, _ = self.attn(x, x, x)
+        x = self.Gamma(x * xa)
+        return x
+
+
 class Pool_attn(nn.Module):
     def __init__(self, batch_size, out_dim):
         super(Pool_attn, self).__init__()
@@ -249,6 +261,15 @@ class DTanh(nn.Module):
                     PermEqui_attn_concat(self.d_dim, self.d_dim),
                     nn.Tanh(),
                     PermEqui_attn_concat(self.d_dim, self.d_dim),
+                    nn.Tanh(),
+            )
+        elif pool == 'attn_dot':
+            self.phi = nn.Sequential(
+                    PermEqui_attn_dot(self.x_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui_attn_dot(self.d_dim, self.d_dim),
+                    nn.Tanh(),
+                    PermEqui_attn_dot(self.d_dim, self.d_dim),
                     nn.Tanh(),
             )
         elif pool == 'norm':
