@@ -70,6 +70,33 @@ class PermEqui_attn_dot(nn.Module):
         return x
 
 
+class PermEqui_max_attn(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super(PermEqui_max_attn, self).__init__()
+        self.Gamma = nn.Linear(in_dim, out_dim)
+        self.attn = MultiHeadAttention(1, in_dim, out_dim, in_dim)
+
+    def forward(self, x):
+        xm, _ = x.max(1, keepdim=True)
+        x = x - xm
+        xa, _ = self.attn(x, x, x)
+        x = self.Gamma(x - xa)
+        return x
+
+class PermEqui_max_attn_concat(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super(PermEqui_max_attn_concat, self).__init__()
+        self.Gamma = nn.Linear(in_dim*2, out_dim)
+        self.attn = MultiHeadAttention(1, in_dim, out_dim, in_dim)
+
+    def forward(self, x):
+        xm, _ = x.max(1, keepdim=True)
+        x = x - xm
+        xa, _ = self.attn(x, x, x)
+        x = self.Gamma(torch.cat((x, xa), -1))
+        return x
+
+
 class Pool_attn(nn.Module):
     def __init__(self, batch_size, out_dim):
         super(Pool_attn, self).__init__()
