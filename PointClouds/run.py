@@ -12,7 +12,7 @@ import modelnet
 #################### Settings ##############################
 num_epochs = 1000
 batch_size = 64
-downsample = 100    #For 5000 points use 2, for 1000 use 10, for 100 use 100
+downsample = 1000    #For 5000 points use 2, for 1000 use 10, for 100 use 100
 network_dim = 256  #For 5000 points use 512, for 1000 use 256, for 100 use 256
 num_repeats = 5    #Number of times to repeat the experiment
 data_path = 'sources/data.h5'
