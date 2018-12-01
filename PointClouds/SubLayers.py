@@ -6,6 +6,7 @@ from Modules import ScaledDotProductAttention
 
 __author__ = "Yu-Hsiang Huang"
 
+
 class MultiHeadAttention(nn.Module):
     ''' Multi-Head Attention module '''
 
@@ -31,7 +32,6 @@ class MultiHeadAttention(nn.Module):
 
         # self.dropout = nn.Dropout(dropout)
 
-
     def forward(self, q, k, v, mask=None):
 
         d_k, d_v, n_head = self.d_k, self.d_v, self.n_head
@@ -50,7 +50,7 @@ class MultiHeadAttention(nn.Module):
         v = v.permute(2, 0, 1, 3).contiguous().view(-1, len_v, d_v) # (n*b) x lv x dv
 
         if mask is not None:
-            mask = mask.repeat(n_head, 1, 1) # (n*b) x .. x ..
+            mask = mask.repeat(n_head, 1, 1)  # (n*b) x .. x ..
         output, attn = self.attention(q, k, v, mask=mask)
 
         output = output.view(n_head, sz_b, len_q, d_v)
@@ -61,6 +61,7 @@ class MultiHeadAttention(nn.Module):
         # output1 = self.layer_norm(output)
 
         return output, attn
+
 
 class PositionwiseFeedForward(nn.Module):
     ''' A two-feed-forward-layer module '''
