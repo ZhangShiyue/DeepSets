@@ -19,7 +19,7 @@ class SAB(nn.Module):
     self.Attn = MultiHeadAttention(n_head, out_dim, out_dim, out_dim)
     self.rFF = PositionwiseFeedForward(out_dim, out_dim)
     
-  def forward(self, x, relu_2=False):
+  def forward(self, x, relu_2=True):
     output = self.Gamma(x)
     output, _ = self.Attn(output, output, output)
     output = self.rFF(output, relu_2)
@@ -253,6 +253,15 @@ class DTanh(nn.Module):
           Nothing(self.d_dim, self.d_dim),
           nn.Tanh(),
           Nothing(self.d_dim, self.d_dim),
+          nn.Tanh(),
+        )
+    elif pool == 'SAB':
+        self.phi = nn.Sequential(
+          SAB(self.n_head, self.x_dim, self.d_dim),
+          nn.Tanh(),
+          SAB(self.n_head, self.d_dim, self.d_dim),
+          nn.Tanh(),
+          SAB(self.n_head, self.d_dim, self.d_dim),
           nn.Tanh(),
         )
     elif pool == 'ISAB':

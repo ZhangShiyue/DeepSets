@@ -28,7 +28,7 @@ class PointCloudTrainer(object):
         self.model_fetcher = modelnet.ModelFetcher(data_path, batch_size, downsample, do_standardize=True, do_augmentation=True)
 
         #Setup network
-        self.D = classifier.DTanh(network_dim, pool='ISAB').cuda()
+        self.D = classifier.DTanh(network_dim, pool='SAB').cuda()
         # self.D = classifier.ISAB_Pooling(n_head, network_dim).cuda()
         self.L = nn.CrossEntropyLoss().cuda()
         self.optimizer = optim.Adam([{'params':self.D.parameters()}], lr=1e-3, weight_decay=1e-7, eps=1e-3)
