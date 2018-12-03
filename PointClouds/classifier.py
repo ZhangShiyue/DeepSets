@@ -36,7 +36,7 @@ class ISAB(nn.Module):
     self.Attn_2 = MultiHeadAttention(n_head, out_dim, out_dim, out_dim)
     self.rFF_2 = PositionwiseFeedForward(out_dim, out_dim)
     
-  def forward(self, x, relu_2=False):
+  def forward(self, x, relu_2=True):
     x_output = self.Gamma(x)
     output_1, _ = self.Attn_1(self.I, x_output, x_output)
     output_1 = self.rFF_1(output_1, True)
@@ -90,6 +90,14 @@ class PermEqui2_mean(nn.Module):
     x = x - xm
     return x
 
+class Nothing(nn.Module):
+  def __init__(self, in_dim, out_dim):
+    super(Nothing, self).__init__()
+    self.Gamma = nn.Linear(in_dim, out_dim)
+
+  def forward(self, x):
+    x = self.Gamma(x)
+    return x
 
 class SAB_Pooling(nn.Module):
   def __init__(self, n_head, d_dim, x_dim=3):
@@ -195,10 +203,12 @@ class D(nn.Module):
 
 class DTanh(nn.Module):
 
-  def __init__(self, d_dim, x_dim=3, pool = 'mean'):
+  def __init__(self, d_dim, x_dim=3, n_head=4, I_dim=16, pool = 'mean'):
     super(DTanh, self).__init__()
     self.d_dim = d_dim
     self.x_dim = x_dim
+    self.n_head = n_head
+    self.I_dim = I_dim
 
     if pool == 'max':
         self.phi = nn.Sequential(
@@ -236,6 +246,24 @@ class DTanh(nn.Module):
           PermEqui1_mean(self.d_dim, self.d_dim),
           nn.Tanh(),
         )
+    elif pool == 'nothing':
+        self.phi = nn.Sequential(
+          Nothing(self.x_dim, self.d_dim),
+          nn.Tanh(),
+          Nothing(self.d_dim, self.d_dim),
+          nn.Tanh(),
+          Nothing(self.d_dim, self.d_dim),
+          nn.Tanh(),
+        )
+    elif pool == 'ISAB':
+        self.phi = nn.Sequential(
+          ISAB(self.n_head, self.x_dim, self.I_dim, self.d_dim),
+          nn.Tanh(),
+          ISAB(self.n_head, self.d_dim, self.I_dim, self.d_dim),
+          nn.Tanh(),
+          ISAB(self.n_head, self.d_dim, self.I_dim, self.d_dim),
+          nn.Tanh(),
+        )
 
     self.ro = nn.Sequential(
        nn.Dropout(p=0.5),
@@ -249,6 +277,7 @@ class DTanh(nn.Module):
   def forward(self, x):
     phi_output = self.phi(x)
     sum_output, _ = phi_output.max(1)
+    # sum_output = phi_output.sum(1)
     ro_output = self.ro(sum_output)
     return ro_output
 
